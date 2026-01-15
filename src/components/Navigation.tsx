@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Code2, Home, BookOpen, Calendar, Image, Mail, LogOut, User, Shield, FileText, Sun, Moon } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "../context/ThemeContext";
@@ -13,9 +12,6 @@ interface NavigationProps {
 }
 
 export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, username, isAdmin }: NavigationProps) {
-  // Debug logging
-  console.log("Navigation - isAdmin prop:", isAdmin, "type:", typeof isAdmin);
-  
   const navItems = [
     { id: "home", label: "Home", icon: Home },
     { id: "blog", label: "Blog", icon: BookOpen },
@@ -26,16 +22,13 @@ export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, u
 
   const userNavItems = isLoggedIn 
     ? [
-        { id: "profile", label: "Profile", icon: User },
         { id: "submit-article", label: "Submit Article", icon: FileText }
       ]
     : [];
 
-  const adminNavItems = isAdmin === true
+  const adminNavItems = isAdmin
     ? [{ id: "admin", label: "Admin", icon: Shield }]
     : [];
-    
-  console.log("Navigation - adminNavItems:", adminNavItems);
 
   const { theme, toggleTheme } = useTheme();
 
@@ -48,11 +41,7 @@ export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, u
               <Code2 className="w-8 h-8 text-cyan-400" />
               <div className="absolute inset-0 blur-md bg-cyan-400/50"></div>
             </div>
-            <img 
-                src="/assets/blogo.svg" 
-                alt="Bitsa Logo" 
-                className="h-10 w-auto group-hover:scale-105 transition-transform"
-              />
+            <span className="text-white dark:text-white light:text-gray-900 tracking-wider">BITSA CLUB</span>
           </div>
 
           <div className="hidden md:flex items-center gap-1">

@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useState, useEffect } from "react";
 import { Code2, Users, Rocket, Trophy, Calendar, BookOpen, Image as ImageIcon, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
