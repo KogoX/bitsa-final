@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Calendar, User, ArrowRight, Clock, Loader2 } from "lucide-react";
+import { Calendar, User, ArrowRight, Clock, Loader2, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 
 interface Blog {
   id: string;
@@ -21,6 +22,8 @@ interface Blog {
 export function Blog() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchBlogs();
@@ -67,6 +70,11 @@ export function Blog() {
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  const handleReadMore = (blog: Blog) => {
+    setSelectedBlog(blog);
+    setIsDialogOpen(true);
   };
 
   if (loading) {
@@ -153,6 +161,7 @@ export function Blog() {
                       variant="ghost"
                       size="sm"
                       className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+                      onClick={() => handleReadMore(post)}
                     >
                       Read More
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -164,6 +173,81 @@ export function Blog() {
           </div>
         )}
       </div>
+
+      {/* Blog Detail Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-gray-900 border-cyan-500/30 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedBlog && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl md:text-3xl text-white pr-8">
+                  {selectedBlog.title}
+                </DialogTitle>
+                <DialogDescription className="text-gray-400">
+                  {selectedBlog.excerpt}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                {/* Blog Image */}
+                {selectedBlog.image ? (
+                  <div className="relative h-64 md:h-96 overflow-hidden rounded-lg">
+                    <ImageWithFallback
+                      src={selectedBlog.image}
+                      alt={selectedBlog.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-64 md:h-96 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center rounded-lg">
+                    <span className="text-6xl text-cyan-400/50">📝</span>
+                  </div>
+                )}
+
+                {/* Meta Information */}
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    <span>{selectedBlog.author}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    <span>{formatDate(selectedBlog.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{selectedBlog.readTime}</span>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                {selectedBlog.tags && selectedBlog.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedBlog.tags.map((tag, index) => (
+                      <Badge key={index} className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {/* Blog Content */}
+                <div className="prose prose-invert max-w-none">
+                  <div 
+                    className="text-gray-300 leading-relaxed whitespace-pre-wrap"
+                    style={{ 
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word'
+                    }}
+                  >
+                    {selectedBlog.content}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
