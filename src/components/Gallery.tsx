@@ -1,74 +1,69 @@
-import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 
-const galleryImages = [
-  {
-    id: 1,
-    url: "https://images.unsplash.com/photo-1640163561346-7778a2edf353?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWNrYXRob24lMjBzdHVkZW50c3xlbnwxfHx8fDE3NjIzMDIyMjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Hackathon 2023",
-    category: "Events"
-  },
-  {
-    id: 2,
-    url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXZlbG9wZXIlMjB0ZWFtfGVufDF8fHx8MTc2MjM1MDEwMHww&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Team Collaboration",
-    category: "Community"
-  },
-  {
-    id: 3,
-    url: "https://images.unsplash.com/photo-1700936655767-7049129f1995?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwZXZlbnQlMjBjb25mZXJlbmNlfGVufDF8fHx8MTc2MjMzMzA3N3ww&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Tech Conference",
-    category: "Events"
-  },
-  {
-    id: 4,
-    url: "https://images.unsplash.com/photo-1565229284535-2cbbe3049123?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2RpbmclMjBwcm9ncmFtbWluZ3xlbnwxfHx8fDE3NjIyMzQ3MTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Workshop Session",
-    category: "Workshops"
-  },
-  {
-    id: 5,
-    url: "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MjMxNTk5Nnww&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Study Sessions",
-    category: "Community"
-  },
-  {
-    id: 6,
-    url: "https://images.unsplash.com/photo-1673885831398-9581891a3155?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21wdXRlciUyMHNjaWVuY2UlMjB0ZWNobm9sb2d5fGVufDF8fHx8MTc2MjI2NTgyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "AI Workshop",
-    category: "Workshops"
-  },
-  {
-    id: 7,
-    url: "https://images.unsplash.com/photo-1640163561346-7778a2edf353?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYWNrYXRob24lMjBzdHVkZW50c3xlbnwxfHx8fDE3NjIzMDIyMjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Code Review",
-    category: "Community"
-  },
-  {
-    id: 8,
-    url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXZlbG9wZXIlMjB0ZWFtfGVufDF8fHx8MTc2MjM1MDEwMHww&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Project Showcase",
-    category: "Events"
-  },
-  {
-    id: 9,
-    url: "https://images.unsplash.com/photo-1700936655767-7049129f1995?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwZXZlbnQlMjBjb25mZXJlbmNlfGVufDF8fHx8MTc2MjMzMzA3N3ww&ixlib=rb-4.1.0&q=80&w=1080",
-    title: "Guest Speaker",
-    category: "Events"
-  }
-];
+interface GalleryImage {
+  id: string;
+  url: string;
+  caption: string;
+  category: string;
+  createdAt: string;
+}
 
 export function Gallery() {
-  const [selectedImage, setSelectedImage] = useState<typeof galleryImages[0] | null>(null);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
 
-  const categories = ["all", "Events", "Workshops", "Community"];
-  const filteredImages = filter === "all" 
-    ? galleryImages 
-    : galleryImages.filter(img => img.category === filter);
+  useEffect(() => {
+    fetchGallery();
+  }, []);
+
+  const fetchGallery = async () => {
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/gallery`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setGalleryImages(data.photos);
+      }
+    } catch (error) {
+      console.error("Error fetching gallery:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get unique categories from photos
+  const getCategories = () => {
+    const uniqueCategories = Array.from(
+      new Set(galleryImages.map((img) => img.category).filter(Boolean))
+    );
+    return ["all", ...uniqueCategories];
+  };
+
+  const categories = getCategories();
+  const filteredImages =
+    filter === "all"
+      ? galleryImages
+      : galleryImages.filter((img) => img.category === filter);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-20 px-4">
@@ -103,29 +98,43 @@ export function Gallery() {
         </div>
 
         {/* Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {filteredImages.map((image) => (
-            <div
-              key={image.id}
-              onClick={() => setSelectedImage(image)}
-              className="relative group cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/50 transition-all"
-            >
-              <ImageWithFallback
-                src={image.url}
-                alt={image.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-white mb-2">{image.title}</h3>
-                  <Badge className="bg-cyan-500/90 text-black border-0">
-                    {image.category}
-                  </Badge>
+        {galleryImages.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-gray-400 text-lg">
+              No photos in the gallery yet. Check back soon!
+            </p>
+          </div>
+        ) : filteredImages.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-gray-400 text-lg">
+              No photos found in this category.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {filteredImages.map((image) => (
+              <div
+                key={image.id}
+                onClick={() => setSelectedImage(image)}
+                className="relative group cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/50 transition-all"
+              >
+                <ImageWithFallback
+                  src={image.url}
+                  alt={image.caption}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="text-white mb-2">{image.caption}</h3>
+                    <Badge className="bg-cyan-500/90 text-black border-0">
+                      {image.category}
+                    </Badge>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Lightbox */}
         {selectedImage && (
@@ -142,11 +151,11 @@ export function Gallery() {
             <div className="max-w-5xl max-h-[90vh] relative">
               <ImageWithFallback
                 src={selectedImage.url}
-                alt={selectedImage.title}
+                alt={selectedImage.caption}
                 className="max-w-full max-h-[80vh] object-contain"
               />
               <div className="text-center mt-4">
-                <h3 className="text-white text-xl mb-2">{selectedImage.title}</h3>
+                <h3 className="text-white text-xl mb-2">{selectedImage.caption}</h3>
                 <Badge className="bg-cyan-500 text-black border-0">
                   {selectedImage.category}
                 </Badge>
