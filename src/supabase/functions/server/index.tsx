@@ -9,7 +9,7 @@ declare const Deno: {
 // Note: npm: and jsr: imports are Deno-specific and correct for Supabase Edge Functions
 // TypeScript may show errors locally, but these work correctly when deployed to Supabase
 // @ts-ignore - Deno-specific import protocol
-import { Hono } from "npm:hono";
+import { Hono, Context } from "npm:hono";
 // @ts-ignore - Deno-specific import protocol
 import { cors } from "npm:hono/cors";
 // @ts-ignore - Deno-specific import protocol
@@ -37,12 +37,12 @@ app.use(
 );
 
 // Health check endpoint
-app.get("/make-server-430e8b93/health", (c) => {
+app.get("/make-server-430e8b93/health", (c: Context) => {
   return c.json({ status: "ok" });
 });
 
 // Sign up endpoint
-app.post("/make-server-430e8b93/signup", async (c) => {
+app.post("/make-server-430e8b93/signup", async (c: Context) => {
   try {
     const { name, email, password, studentId } = await c.req.json();
     
@@ -99,7 +99,7 @@ app.post("/make-server-430e8b93/signup", async (c) => {
 });
 
 // Google OAuth signup endpoint - creates profile for Google users
-app.post("/make-server-430e8b93/google-signup", async (c) => {
+app.post("/make-server-430e8b93/google-signup", async (c: Context) => {
   try {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
@@ -155,7 +155,7 @@ app.post("/make-server-430e8b93/google-signup", async (c) => {
 });
 
 // Sign in endpoint (handled by Supabase client, but we can add server validation if needed)
-app.post("/make-server-430e8b93/signin", async (c) => {
+app.post("/make-server-430e8b93/signin", async (c: Context) => {
   try {
     const { email, password } = await c.req.json();
     
@@ -190,7 +190,7 @@ app.post("/make-server-430e8b93/signin", async (c) => {
 });
 
 // Get user profile
-app.get("/make-server-430e8b93/profile", async (c) => {
+app.get("/make-server-430e8b93/profile", async (c: Context) => {
   try {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
@@ -224,7 +224,7 @@ app.get("/make-server-430e8b93/profile", async (c) => {
 });
 
 // Update user profile
-app.put("/make-server-430e8b93/profile", async (c) => {
+app.put("/make-server-430e8b93/profile", async (c: Context) => {
   try {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
@@ -272,7 +272,7 @@ app.put("/make-server-430e8b93/profile", async (c) => {
 // ==================== ADMIN ENDPOINTS ====================
 
 // Helper function to verify admin access
-async function verifyAdmin(c: any) {
+async function verifyAdmin(c: Context) {
   const accessToken = c.req.header('Authorization')?.split(' ')[1];
   
   if (!accessToken) {
@@ -310,7 +310,7 @@ async function verifyAdmin(c: any) {
 }
 
 // Check if user is admin
-app.get("/make-server-430e8b93/admin/check", async (c) => {
+app.get("/make-server-430e8b93/admin/check", async (c: Context) => {
   try {
     const result = await verifyAdmin(c);
     
@@ -328,7 +328,7 @@ app.get("/make-server-430e8b93/admin/check", async (c) => {
 // ==================== BLOG ENDPOINTS ====================
 
 // Get all approved blogs (for public view)
-app.get("/make-server-430e8b93/blogs", async (c) => {
+app.get("/make-server-430e8b93/blogs", async (c: Context) => {
   try {
     const allBlogs = await kv.getByPrefix("blog:");
     // Filter only approved blogs for public view
@@ -344,7 +344,7 @@ app.get("/make-server-430e8b93/blogs", async (c) => {
 });
 
 // Get all blogs including pending (admin only)
-app.get("/make-server-430e8b93/admin/all-blogs", async (c) => {
+app.get("/make-server-430e8b93/admin/all-blogs", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -363,7 +363,7 @@ app.get("/make-server-430e8b93/admin/all-blogs", async (c) => {
 });
 
 // Submit article (members - requires approval)
-app.post("/make-server-430e8b93/articles/submit", async (c) => {
+app.post("/make-server-430e8b93/articles/submit", async (c: Context) => {
   try {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
@@ -428,7 +428,7 @@ app.post("/make-server-430e8b93/articles/submit", async (c) => {
 });
 
 // Create blog (admin only - auto approved)
-app.post("/make-server-430e8b93/admin/blogs", async (c) => {
+app.post("/make-server-430e8b93/admin/blogs", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -465,7 +465,7 @@ app.post("/make-server-430e8b93/admin/blogs", async (c) => {
 });
 
 // Approve article (admin only)
-app.put("/make-server-430e8b93/admin/blogs/:id/approve", async (c) => {
+app.put("/make-server-430e8b93/admin/blogs/:id/approve", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -496,7 +496,7 @@ app.put("/make-server-430e8b93/admin/blogs/:id/approve", async (c) => {
 });
 
 // Reject article (admin only)
-app.put("/make-server-430e8b93/admin/blogs/:id/reject", async (c) => {
+app.put("/make-server-430e8b93/admin/blogs/:id/reject", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -527,7 +527,7 @@ app.put("/make-server-430e8b93/admin/blogs/:id/reject", async (c) => {
 });
 
 // Update blog (admin only)
-app.put("/make-server-430e8b93/admin/blogs/:id", async (c) => {
+app.put("/make-server-430e8b93/admin/blogs/:id", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -560,7 +560,7 @@ app.put("/make-server-430e8b93/admin/blogs/:id", async (c) => {
 });
 
 // Delete blog (admin only)
-app.delete("/make-server-430e8b93/admin/blogs/:id", async (c) => {
+app.delete("/make-server-430e8b93/admin/blogs/:id", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -580,7 +580,7 @@ app.delete("/make-server-430e8b93/admin/blogs/:id", async (c) => {
 // ==================== EVENT ENDPOINTS ====================
 
 // Get all events
-app.get("/make-server-430e8b93/events", async (c) => {
+app.get("/make-server-430e8b93/events", async (c: Context) => {
   try {
     const events = await kv.getByPrefix("event:");
     const sortedEvents = events.sort((a: any, b: any) => 
@@ -594,7 +594,7 @@ app.get("/make-server-430e8b93/events", async (c) => {
 });
 
 // Create event (admin only)
-app.post("/make-server-430e8b93/admin/events", async (c) => {
+app.post("/make-server-430e8b93/admin/events", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -630,7 +630,7 @@ app.post("/make-server-430e8b93/admin/events", async (c) => {
 });
 
 // Update event (admin only)
-app.put("/make-server-430e8b93/admin/events/:id", async (c) => {
+app.put("/make-server-430e8b93/admin/events/:id", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -662,7 +662,7 @@ app.put("/make-server-430e8b93/admin/events/:id", async (c) => {
 });
 
 // Delete event (admin only)
-app.delete("/make-server-430e8b93/admin/events/:id", async (c) => {
+app.delete("/make-server-430e8b93/admin/events/:id", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -688,7 +688,7 @@ app.delete("/make-server-430e8b93/admin/events/:id", async (c) => {
 // ==================== EVENT REGISTRATION ENDPOINTS ====================
 
 // Register for event
-app.post("/make-server-430e8b93/events/:id/register", async (c) => {
+app.post("/make-server-430e8b93/events/:id/register", async (c: Context) => {
   try {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
@@ -746,7 +746,7 @@ app.post("/make-server-430e8b93/events/:id/register", async (c) => {
 });
 
 // Check if user is registered for event
-app.get("/make-server-430e8b93/events/:id/check-registration", async (c) => {
+app.get("/make-server-430e8b93/events/:id/check-registration", async (c: Context) => {
   try {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
@@ -776,7 +776,7 @@ app.get("/make-server-430e8b93/events/:id/check-registration", async (c) => {
 });
 
 // Get event registrations (admin only)
-app.get("/make-server-430e8b93/admin/events/:id/registrations", async (c) => {
+app.get("/make-server-430e8b93/admin/events/:id/registrations", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -796,7 +796,7 @@ app.get("/make-server-430e8b93/admin/events/:id/registrations", async (c) => {
 // ==================== GALLERY ENDPOINTS ====================
 
 // Get all gallery photos
-app.get("/make-server-430e8b93/gallery", async (c) => {
+app.get("/make-server-430e8b93/gallery", async (c: Context) => {
   try {
     const photos = await kv.getByPrefix("photo:");
     const sortedPhotos = photos.sort((a: any, b: any) => 
@@ -810,7 +810,7 @@ app.get("/make-server-430e8b93/gallery", async (c) => {
 });
 
 // Add photo to gallery (admin only)
-app.post("/make-server-430e8b93/admin/gallery", async (c) => {
+app.post("/make-server-430e8b93/admin/gallery", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -842,7 +842,7 @@ app.post("/make-server-430e8b93/admin/gallery", async (c) => {
 });
 
 // Delete photo from gallery (admin only)
-app.delete("/make-server-430e8b93/admin/gallery/:id", async (c) => {
+app.delete("/make-server-430e8b93/admin/gallery/:id", async (c: Context) => {
   try {
     const adminCheck = await verifyAdmin(c);
     if (adminCheck.error) {
@@ -862,7 +862,7 @@ app.delete("/make-server-430e8b93/admin/gallery/:id", async (c) => {
 // ==================== STATS ENDPOINTS ====================
 
 // Get members count
-app.get("/make-server-430e8b93/stats/members", async (c) => {
+app.get("/make-server-430e8b93/stats/members", async (c: Context) => {
   try {
     const profiles = await kv.getByPrefix("profile:");
     return c.json({ success: true, count: profiles.length });

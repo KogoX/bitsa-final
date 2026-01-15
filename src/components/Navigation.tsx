@@ -41,7 +41,11 @@ export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, u
               <Code2 className="w-8 h-8 text-cyan-400" />
               <div className="absolute inset-0 blur-md bg-cyan-400/50"></div>
             </div>
-            <span className="text-white dark:text-white light:text-gray-900 tracking-wider">BITSA CLUB</span>
+            <img 
+              src="/assets/blogo.svg" 
+              alt="Bitsa Logo"
+              className="h-10 width-auto group-hover: scale-105 transition-transform"
+            />
           </div>
 
           <div className="hidden md:flex items-center gap-1">

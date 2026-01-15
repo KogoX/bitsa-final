@@ -73,7 +73,7 @@ export const mget = async (keys: string[]): Promise<any[]> => {
   if (error) {
     throw new Error(error.message);
   }
-  return data?.map((d) => d.value) ?? [];
+  return data?.map((d: any) => d.value) ?? [];
 };
 
 // Deletes multiple key-value pairs from the database.
@@ -92,5 +92,5 @@ export const getByPrefix = async (prefix: string): Promise<any[]> => {
   if (error) {
     throw new Error(error.message);
   }
-  return data?.map((d) => d.value) ?? [];
+  return data?.map((d: any) => d.value) ?? [];
 };
