@@ -116,7 +116,7 @@ export function Gallery() {
               <div
                 key={image.id}
                 onClick={() => setSelectedImage(image)}
-                className="relative group cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/50 transition-all"
+                className="relative group cursor-zoom-in overflow-hidden rounded-lg aspect-square bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/50 transition-all"
               >
                 <ImageWithFallback
                   src={image.url}
@@ -152,7 +152,7 @@ export function Gallery() {
               <ImageWithFallback
                 src={selectedImage.url}
                 alt={selectedImage.caption}
-                className="max-w-full max-h-[80vh] object-contain"
+                className="max-w-full max-h-[80vh] object-contain cursor-zoom-out"
               />
               <div className="text-center mt-4">
                 <h3 className="text-white text-xl mb-2">{selectedImage.caption}</h3>
