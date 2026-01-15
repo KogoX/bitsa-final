@@ -6,6 +6,9 @@ import { Button } from "./ui/button";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 
 interface Blog {
   id: string;
@@ -232,16 +235,13 @@ export function Blog() {
                 )}
 
                 {/* Blog Content */}
-                <div className="prose prose-invert max-w-none">
-                  <div 
-                    className="text-gray-300 leading-relaxed whitespace-pre-wrap"
-                    style={{ 
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word'
-                    }}
-                  >
-                    {selectedBlog.content}
-                  </div>
+                <div className="prose prose-invert max-w-none text-gray-300">
+                  {/* Render markdown safely so <p>, <h*>, <ul>, etc. are created and styled by .prose */}
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeSanitize]}
+                    children={selectedBlog.content}
+                  />
                 </div>
               </div>
             </>
