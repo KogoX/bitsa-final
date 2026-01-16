@@ -26,22 +26,22 @@ export function Contact() {
     {
       icon: MapPin,
       title: "Location",
-      content: "Computer Science Building, Room 101\nUniversity Campus"
+      content: "Library Building, Bitsa Club Room\nUniversity Campus"
     },
     {
       icon: Mail,
       title: "Email",
-      content: "csclub@university.edu"
+      content: "bitsaclub@ueab.ac.ke"
     },
     {
       icon: Phone,
       title: "Phone",
-      content: "+1 (555) 123-4567"
+      content: "0708 898 899/0725 486 687"
     },
     {
       icon: Globe,
       title: "Social Media",
-      content: "@cs_club"
+      content: "LinkedIn: BITSA CLUB"
     }
   ];
 
