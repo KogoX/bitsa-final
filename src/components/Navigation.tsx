@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Code2, Home, BookOpen, Calendar, Image, Mail, LogOut, User, Shield, FileText, Sun, Moon, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "../context/ThemeContext";

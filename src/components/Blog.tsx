@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Calendar, User, ArrowRight, Clock, Loader2, X } from "lucide-react";
+import { Calendar, User, ArrowRight, Clock, Loader2, X, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
@@ -125,7 +125,7 @@ export function Blog() {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
-                      <span className="text-4xl text-cyan-400/50">📝</span>
+                      <FileText className="w-16 h-16 text-cyan-400/50" />
                     </div>
                   )}
                   <div className="absolute top-3 right-3">
@@ -203,7 +203,7 @@ export function Blog() {
                   </div>
                 ) : (
                   <div className="h-64 md:h-96 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center rounded-lg">
-                    <span className="text-6xl text-cyan-400/50">📝</span>
+                    <FileText className="w-24 h-24 text-cyan-400/50" />
                   </div>
                 )}
 

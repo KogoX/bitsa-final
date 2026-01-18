@@ -116,16 +116,16 @@ export function Gallery() {
               <div
                 key={image.id}
                 onClick={() => setSelectedImage(image)}
-                className="relative group cursor-zoom-in overflow-hidden rounded-lg aspect-square bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/50 transition-all"
+                className="relative group cursor-zoom-in overflow-hidden rounded-lg aspect-square bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20"
               >
                 <ImageWithFallback
                   src={image.url}
                   alt={image.caption}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="text-white mb-2">{image.caption}</h3>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <h3 className="text-white mb-2 font-medium">{image.caption}</h3>
                     <Badge className="bg-cyan-500/90 text-black border-0">
                       {image.category}
                     </Badge>
