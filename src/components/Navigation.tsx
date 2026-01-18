@@ -1,6 +1,13 @@
-import { Code2, Home, BookOpen, Calendar, Image, Mail, LogOut, User, Shield, FileText, Sun, Moon } from "lucide-react";
+import { Code2, Home, BookOpen, Calendar, Image, Mail, LogOut, User, Shield, FileText, Sun, Moon, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "../context/ThemeContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface NavigationProps {
   currentSection: string;
@@ -98,15 +105,49 @@ export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, u
                   <User className="w-4 h-4 text-cyan-400" />
                   <span className="text-sm text-cyan-400">{username}</span>
                 </button>
+                {/* Desktop Logout Button */}
                 <Button
                   onClick={onLogout}
                   variant="ghost"
                   size="sm"
-                  className="text-gray-300 hover:text-red-400 hover:bg-red-500/10"
+                  className="hidden md:flex text-gray-300 hover:text-red-400 hover:bg-red-500/10"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </Button>
+                {/* Mobile Profile Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="md:hidden text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/10"
+                    >
+                      <User className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-48 bg-black/95 dark:bg-black/95 border border-cyan-500/20 text-gray-300"
+                  >
+                    <DropdownMenuItem
+                      onClick={() => onNavigate("profile")}
+                      className="focus:bg-cyan-500/20 focus:text-cyan-400 cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Update Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-cyan-500/20" />
+                    <DropdownMenuItem
+                      onClick={onLogout}
+                      variant="destructive"
+                      className="focus:bg-red-500/20 focus:text-red-400 cursor-pointer text-red-400"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <Button
