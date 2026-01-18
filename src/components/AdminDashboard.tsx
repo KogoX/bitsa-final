@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Badge } from "./ui/badge";
-import { Shield, BookOpen, Calendar, Image as ImageIcon, Trash2, Edit, Plus, Loader2, Save, X, CheckCircle, XCircle, Users, Clock } from "lucide-react";
+import { Shield, BookOpen, Calendar, Image as ImageIcon, Trash2, Edit, Plus, Loader2, Save, X, CheckCircle, XCircle, Users, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 
@@ -999,9 +999,18 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
                           <h4 className="text-xl text-white mb-2">{event.title}</h4>
                           <p className="text-gray-400 text-sm mb-3">{event.description}</p>
                           <div className="flex flex-wrap gap-4 text-sm text-gray-400">
-                            <span>📅 {new Date(event.date).toLocaleDateString()}</span>
-                            <span>🕐 {event.time}</span>
-                            <span>📍 {event.location}</span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(event.date).toLocaleDateString()}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {event.time}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {event.location}
+                            </span>
                           </div>
                         </div>
                         <div className="flex gap-2">
