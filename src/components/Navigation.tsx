@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Code2, Home, BookOpen, Calendar, Image, Mail, LogOut, User, Shield, FileText, Sun, Moon, Settings } from "lucide-react";
+import { Code2, Home, BookOpen, Calendar, Image, Mail, LogOut, User, Shield, FileText, Sun, Moon, Settings, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { SearchDialog } from "./SearchDialog";
 
 interface NavigationProps {
   currentSection: string;
@@ -82,6 +83,9 @@ export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, u
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Search */}
+            <SearchDialog onNavigate={onNavigate} />
+            
             {/* Theme Toggle */}
             <Button
               onClick={toggleTheme}
