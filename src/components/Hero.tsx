@@ -28,6 +28,8 @@ export function Hero({ onNavigate, isLoggedIn }: HeroProps) {
   const [recentEvents, setRecentEvents] = useState<any[]>([]);
   const [recentBlogs, setRecentBlogs] = useState<any[]>([]);
   const [recentPhotos, setRecentPhotos] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [workshops, setWorkshops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -83,24 +85,22 @@ export function Hero({ onNavigate, isLoggedIn }: HeroProps) {
       if (eventsData.success) {
         const events = eventsData.events;
         
-        // Count event types
-        const projectsCount = events.filter((e: any) => 
-          e.title.toLowerCase().includes('project')
-        ).length;
-        
-        const hackathonsCount = events.filter((e: any) => 
-          e.title.toLowerCase().includes('hackathon')
-        ).length;
-        
-        const workshopsCount = events.filter((e: any) => 
-          e.title.toLowerCase().includes('workshop')
-        ).length;
+        // Count event types by category
+        const projectsList = events.filter((e: any) => 
+          (e.category || "event").toLowerCase() === "project"
+        );
+        const hackathonsList = events.filter((e: any) => 
+          (e.category || "event").toLowerCase() === "hackathon"
+        );
+        const workshopsList = events.filter((e: any) => 
+          (e.category || "event").toLowerCase() === "workshop"
+        );
 
         setStats({
           activeMembers: membersData.count || 0,
-          projects: projectsCount,
-          hackathons: hackathonsCount,
-          workshops: workshopsCount,
+          projects: projectsList.length,
+          hackathons: hackathonsList.length,
+          workshops: workshopsList.length,
         });
 
         // Get upcoming events (limit to 3)
@@ -118,6 +118,26 @@ export function Hero({ onNavigate, isLoggedIn }: HeroProps) {
           .slice(0, 3);
         
         setRecentEvents(upcoming);
+
+        // Get recent projects (limit to 3)
+        const recentProjects = projectsList
+          .sort((a: any, b: any) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateB.getTime() - dateA.getTime();
+          })
+          .slice(0, 3);
+        setProjects(recentProjects);
+
+        // Get recent workshops (limit to 3)
+        const recentWorkshops = workshopsList
+          .sort((a: any, b: any) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateB.getTime() - dateA.getTime();
+          })
+          .slice(0, 3);
+        setWorkshops(recentWorkshops);
       }
 
       if (blogsData.success) {
@@ -367,6 +387,150 @@ export function Hero({ onNavigate, isLoggedIn }: HeroProps) {
               <CardContent className="py-12 text-center">
                 <BookOpen className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400">No articles published yet.</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Projects Preview */}
+        <div className="mb-20">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-cyan-400 text-sm">
+                <span className="opacity-50">{'<'}</span>
+                <span className="font-mono">ACTIVE_PROJECTS</span>
+                <span className="opacity-50">{'/>'}</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl text-white">Our Projects</h2>
+            </div>
+            <Button
+              onClick={() => onNavigate("events")}
+              variant="outline"
+              className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+            >
+              View All
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="text-center text-gray-400">Loading...</div>
+          ) : projects.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {projects.map((project) => (
+                <Card
+                  key={project.id}
+                  className="bg-gray-900/50 backdrop-blur-sm border-purple-500/20 hover:border-purple-500/50 transition-all group overflow-hidden cursor-pointer"
+                  onClick={() => onNavigate("events")}
+                >
+                  {project.image && (
+                    <div className="relative h-40 overflow-hidden">
+                      <ImageWithFallback
+                        src={project.image}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-purple-500/90 text-white border-0">
+                          Project
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-white group-hover:text-purple-400 transition-colors">
+                      {project.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 line-clamp-2">
+                      {project.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
+                      <Calendar className="w-4 h-4 text-purple-400" />
+                      <span>{new Date(project.date).toLocaleDateString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-gray-900/50 backdrop-blur-sm border-purple-500/20">
+              <CardContent className="py-12 text-center">
+                <Rocket className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">No projects available yet.</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Workshops Preview */}
+        <div className="mb-20">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-cyan-400 text-sm">
+                <span className="opacity-50">{'<'}</span>
+                <span className="font-mono">UPCOMING_WORKSHOPS</span>
+                <span className="opacity-50">{'/>'}</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl text-white">Workshops</h2>
+            </div>
+            <Button
+              onClick={() => onNavigate("events")}
+              variant="outline"
+              className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10"
+            >
+              View All
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="text-center text-gray-400">Loading...</div>
+          ) : workshops.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {workshops.map((workshop) => (
+                <Card
+                  key={workshop.id}
+                  className="bg-gray-900/50 backdrop-blur-sm border-orange-500/20 hover:border-orange-500/50 transition-all group overflow-hidden cursor-pointer"
+                  onClick={() => onNavigate("events")}
+                >
+                  {workshop.image && (
+                    <div className="relative h-40 overflow-hidden">
+                      <ImageWithFallback
+                        src={workshop.image}
+                        alt={workshop.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-orange-500/90 text-black border-0">
+                          Workshop
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-white group-hover:text-orange-400 transition-colors">
+                      {workshop.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 line-clamp-2">
+                      {workshop.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
+                      <Calendar className="w-4 h-4 text-orange-400" />
+                      <span>{new Date(workshop.date).toLocaleDateString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-gray-900/50 backdrop-blur-sm border-orange-500/20">
+              <CardContent className="py-12 text-center">
+                <Code2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">No workshops scheduled yet.</p>
               </CardContent>
             </Card>
           )}

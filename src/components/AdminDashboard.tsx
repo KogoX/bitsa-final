@@ -37,6 +37,7 @@ interface Event {
   time: string;
   location: string;
   image: string;
+  category?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,7 +89,8 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
     date: "",
     time: "",
     location: "",
-    image: ""
+    image: "",
+    category: "event"
   });
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
@@ -534,7 +536,8 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
       date: "",
       time: "",
       location: "",
-      image: ""
+      image: "",
+      category: "event"
     });
     setEditingEvent(null);
   };
@@ -569,7 +572,8 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
       date: event.date,
       time: event.time,
       location: event.location,
-      image: event.image
+      image: event.image,
+      category: (event as any).category || "event"
     });
     setEventDialogOpen(true);
   };
@@ -947,6 +951,19 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
                         className="bg-gray-800/50 border-cyan-500/30 text-white"
                         placeholder="Event location"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Category</Label>
+                      <select
+                        value={eventForm.category}
+                        onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
+                        className="w-full bg-gray-800/50 border border-cyan-500/30 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        <option value="event">Event</option>
+                        <option value="project">Project</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="hackathon">Hackathon</option>
+                      </select>
                     </div>
                     <div className="space-y-2">
                       <Label>Image URL</Label>

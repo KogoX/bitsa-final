@@ -582,8 +582,17 @@ app.delete("/make-server-430e8b93/admin/blogs/:id", async (c: Context) => {
 // Get all events
 app.get("/make-server-430e8b93/events", async (c: Context) => {
   try {
+    const category = c.req.query("category");
     const events = await kv.getByPrefix("event:");
-    const sortedEvents = events.sort((a: any, b: any) => 
+    
+    let filteredEvents = events;
+    if (category) {
+      filteredEvents = events.filter((e: any) => 
+        (e.category || "event").toLowerCase() === category.toLowerCase()
+      );
+    }
+    
+    const sortedEvents = filteredEvents.sort((a: any, b: any) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     return c.json({ success: true, events: sortedEvents });
@@ -601,7 +610,7 @@ app.post("/make-server-430e8b93/admin/events", async (c: Context) => {
       return c.json({ error: adminCheck.error }, adminCheck.status);
     }
 
-    const { title, description, date, time, location, image } = await c.req.json();
+    const { title, description, date, time, location, image, category } = await c.req.json();
     
     if (!title || !date || !time || !location) {
       return c.json({ error: "Title, date, time, and location are required" }, 400);
@@ -616,6 +625,7 @@ app.post("/make-server-430e8b93/admin/events", async (c: Context) => {
       time,
       location,
       image: image || "",
+      category: category || "event", // Default to "event", can be "project", "workshop", "hackathon", "event"
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
