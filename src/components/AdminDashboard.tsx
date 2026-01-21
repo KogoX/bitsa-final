@@ -253,6 +253,12 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
 
   const handleCreateNotification = async () => {
     try {
+      // Validate form
+      if (!notificationForm.title || !notificationForm.message) {
+        toast.error("Title and message are required");
+        return;
+      }
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/admin/notifications`,
         {
@@ -265,6 +271,20 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
         }
       );
 
+      // Check if response is ok
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `HTTP ${response.status}: ${response.statusText}` };
+        }
+        toast.error(errorData.error || `Failed to send notification: ${response.status} ${response.statusText}`);
+        console.error("Notification creation error:", errorData);
+        return;
+      }
+
       const data = await response.json();
       
       if (data.success) {
@@ -274,10 +294,11 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
         fetchNotifications();
       } else {
         toast.error(data.error || "Failed to send notification");
+        console.error("Notification creation failed:", data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating notification:", error);
-      toast.error("Failed to send notification");
+      toast.error(error?.message || "Failed to send notification. Please check your connection and try again.");
     }
   };
 
