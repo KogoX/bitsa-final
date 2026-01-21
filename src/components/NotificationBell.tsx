@@ -34,6 +34,39 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setNotifications(data.notifications || []);
+        // Count unread notifications for current user
+        if (accessToken) {
+          const { data: { user } } = await supabase.auth.getUser(accessToken);
+          if (user) {
+            const unread = data.notifications.filter((n: Notification) => 
+              !n.readBy || !n.readBy.includes(user.id)
+            ).length;
+            setUnreadCount(unread);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
+
   useEffect(() => {
     if (isLoggedIn && accessToken) {
       const getUser = async () => {
@@ -70,48 +103,8 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
   }, [notifications, currentUserId]);
 
   useEffect(() => {
-    // Use transition for non-urgent state update
-    startTransition(() => {
-      setUnreadCount(calculatedUnreadCount);
-    });
-  }, [calculatedUnreadCount, startTransition]);
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/notifications`,
-        {
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        // Use transition for non-urgent state update
-        startTransition(() => {
-          setNotifications(data.notifications || []);
-        });
-        // Count unread notifications for current user (defer if not critical)
-        if (accessToken) {
-          const { data: { user } } = await supabase.auth.getUser(accessToken);
-          if (user) {
-            const unread = data.notifications.filter((n: Notification) => 
-              !n.readBy || !n.readBy.includes(user.id)
-            ).length;
-            startTransition(() => {
-              setUnreadCount(unread);
-            });
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [accessToken, startTransition]);
+    setUnreadCount(calculatedUnreadCount);
+  }, [calculatedUnreadCount]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     if (!accessToken) return;
@@ -203,7 +196,7 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
     startTransition(() => {
       setOpen(newOpen);
     });
-  }, [startTransition]);
+  }, []);
 
   return (
     <DropdownMenu open={open} onOpenChange={handleOpenChange}>
