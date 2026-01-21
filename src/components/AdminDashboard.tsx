@@ -714,26 +714,26 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
 
         {/* Dashboard Tabs */}
         <Tabs defaultValue="blogs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-800/50">
-            <TabsTrigger value="blogs" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-              <BookOpen className="w-4 h-4 mr-2" />
-              Blogs
+          <TabsList className="flex flex-wrap w-full bg-gray-800/50 gap-1 p-1 h-auto">
+            <TabsTrigger value="blogs" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 flex-1 min-w-[120px]">
+              <BookOpen className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="text-xs md:text-sm">Blogs</span>
             </TabsTrigger>
-            <TabsTrigger value="events" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-              <Calendar className="w-4 h-4 mr-2" />
-              Events
+            <TabsTrigger value="events" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 flex-1 min-w-[120px]">
+              <Calendar className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="text-xs md:text-sm">Events</span>
             </TabsTrigger>
-            <TabsTrigger value="registrations" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-              <Users className="w-4 h-4 mr-2" />
-              Registrations
+            <TabsTrigger value="registrations" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 flex-1 min-w-[120px]">
+              <Users className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="text-xs md:text-sm">Registrations</span>
             </TabsTrigger>
-            <TabsTrigger value="gallery" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Gallery
+            <TabsTrigger value="gallery" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 flex-1 min-w-[120px]">
+              <ImageIcon className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="text-xs md:text-sm">Gallery</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 flex-1 min-w-[120px]">
+              <Bell className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="text-xs md:text-sm">Alerts</span>
             </TabsTrigger>
           </TabsList>
 
