@@ -1,12 +1,11 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { Bell, X } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
+import { Bell } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Badge } from "./ui/badge";
@@ -33,6 +32,7 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (isLoggedIn && accessToken) {
@@ -57,21 +57,26 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
       const interval = setInterval(fetchNotifications, 30000);
       return () => clearInterval(interval);
     }
-  }, [isLoggedIn, accessToken]);
+  }, [isLoggedIn, fetchNotifications]);
 
-  useEffect(() => {
-    // Check unread count properly
+  // Memoize unread count calculation
+  const calculatedUnreadCount = useMemo(() => {
     if (notifications.length > 0 && currentUserId) {
-      const unread = notifications.filter((n) => 
+      return notifications.filter((n) => 
         !n.readBy || !n.readBy.includes(currentUserId)
       ).length;
-      setUnreadCount(unread);
-    } else {
-      setUnreadCount(0);
     }
+    return 0;
   }, [notifications, currentUserId]);
 
-  const fetchNotifications = async () => {
+  useEffect(() => {
+    // Use transition for non-urgent state update
+    startTransition(() => {
+      setUnreadCount(calculatedUnreadCount);
+    });
+  }, [calculatedUnreadCount, startTransition]);
+
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -84,15 +89,20 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
       );
       const data = await response.json();
       if (data.success) {
-        setNotifications(data.notifications || []);
-        // Count unread notifications for current user
+        // Use transition for non-urgent state update
+        startTransition(() => {
+          setNotifications(data.notifications || []);
+        });
+        // Count unread notifications for current user (defer if not critical)
         if (accessToken) {
           const { data: { user } } = await supabase.auth.getUser(accessToken);
           if (user) {
             const unread = data.notifications.filter((n: Notification) => 
               !n.readBy || !n.readBy.includes(user.id)
             ).length;
-            setUnreadCount(unread);
+            startTransition(() => {
+              setUnreadCount(unread);
+            });
           }
         }
       }
@@ -101,13 +111,14 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken, startTransition]);
 
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = useCallback(async (notificationId: string) => {
     if (!accessToken) return;
 
     try {
-      await fetch(
+      // Defer the API call to not block UI
+      const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/notifications/${notificationId}/read`,
         {
           method: "PUT",
@@ -116,18 +127,32 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
           },
         }
       );
-      // Refresh notifications
-      fetchNotifications();
+      // Optimistically update UI first, then refresh
+      startTransition(() => {
+        setNotifications(prev => prev.map(n => 
+          n.id === notificationId 
+            ? { ...n, readBy: currentUserId ? [...(n.readBy || []), currentUserId] : n.readBy }
+            : n
+        ));
+      });
+      // Refresh notifications in background
+      setTimeout(() => {
+        fetchNotifications();
+      }, 0);
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
-  };
+  }, [accessToken, currentUserId, fetchNotifications]);
 
-  const handleNotificationClick = (notification: Notification) => {
-    markAsRead(notification.id);
-  };
+  const handleNotificationClick = useCallback((notification: Notification) => {
+    // Use requestAnimationFrame to defer non-critical work
+    requestAnimationFrame(() => {
+      markAsRead(notification.id);
+    });
+  }, [markAsRead]);
 
-  const getNotificationColor = (type: string) => {
+  // Memoize color functions to avoid recreating on each render
+  const getNotificationColor = useCallback((type: string) => {
     switch (type) {
       case "success":
         return "text-green-400 border-green-500/20";
@@ -138,9 +163,9 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
       default:
         return "text-cyan-400 border-cyan-500/20";
     }
-  };
+  }, []);
 
-  const getNotificationBg = (type: string) => {
+  const getNotificationBg = useCallback((type: string) => {
     switch (type) {
       case "success":
         return "bg-green-500/10";
@@ -151,14 +176,37 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
       default:
         return "bg-cyan-500/10";
     }
-  };
+  }, []);
+
+  // Memoize processed notifications to avoid recalculating on each render
+  const processedNotifications = useMemo(() => {
+    return notifications.map((notification) => {
+      const isUnread = currentUserId 
+        ? !notification.readBy || !notification.readBy.includes(currentUserId)
+        : true;
+      return {
+        ...notification,
+        isUnread,
+        colorClass: getNotificationColor(notification.type),
+        bgClass: isUnread ? getNotificationBg(notification.type) : "",
+        formattedDate: new Date(notification.createdAt).toLocaleDateString(),
+      };
+    });
+  }, [notifications, currentUserId, getNotificationColor, getNotificationBg]);
 
   if (!isLoggedIn) {
     return null;
   }
 
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    // Use startTransition to mark this as non-urgent update, improving INP
+    startTransition(() => {
+      setOpen(newOpen);
+    });
+  }, [startTransition]);
+
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -190,39 +238,32 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
           <div className="px-3 py-6 text-center text-sm text-gray-400">
             Loading...
           </div>
-        ) : notifications.length === 0 ? (
+        ) : processedNotifications.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-gray-400">
             No notifications
           </div>
         ) : (
           <div className="py-1">
-            {notifications.map((notification) => {
-              // Check if notification is unread for current user
-              const isUnread = currentUserId 
-                ? !notification.readBy || !notification.readBy.includes(currentUserId)
-                : true;
-              
-              return (
-                <DropdownMenuItem
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`cursor-pointer border-l-2 ${getNotificationColor(notification.type)} ${isUnread ? getNotificationBg(notification.type) : ""} focus:bg-opacity-20`}
-                >
-                  <div className="flex flex-col gap-1 w-full">
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-sm font-medium text-white">{notification.title}</h4>
-                      {isUnread && (
-                        <span className="h-2 w-2 rounded-full bg-cyan-400 flex-shrink-0 mt-1"></span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-400 line-clamp-2">{notification.message}</p>
-                    <span className="text-xs text-gray-500">
-                      {new Date(notification.createdAt).toLocaleDateString()}
-                    </span>
+            {processedNotifications.map((notification) => (
+              <DropdownMenuItem
+                key={notification.id}
+                onClick={() => handleNotificationClick(notification)}
+                className={`cursor-pointer border-l-2 ${notification.colorClass} ${notification.bgClass} focus:bg-opacity-20`}
+              >
+                <div className="flex flex-col gap-1 w-full">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-sm font-medium text-white">{notification.title}</h4>
+                    {notification.isUnread && (
+                      <span className="h-2 w-2 rounded-full bg-cyan-400 flex-shrink-0 mt-1"></span>
+                    )}
                   </div>
-                </DropdownMenuItem>
-              );
-            })}
+                  <p className="text-xs text-gray-400 line-clamp-2">{notification.message}</p>
+                  <span className="text-xs text-gray-500">
+                    {notification.formattedDate}
+                  </span>
+                </div>
+              </DropdownMenuItem>
+            ))}
           </div>
         )}
       </DropdownMenuContent>
