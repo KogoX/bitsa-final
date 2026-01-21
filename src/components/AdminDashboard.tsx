@@ -242,12 +242,31 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
           },
         }
       );
+      
+      // Check if response is ok before parsing JSON
+      if (!response.ok) {
+        // If 404, the endpoint might not be deployed yet
+        if (response.status === 404) {
+          console.log("Notifications endpoint not found (404) - endpoint may not be deployed");
+          setNotifications([]);
+          return;
+        }
+        // For other errors, try to parse error message
+        const errorText = await response.text();
+        console.error("Error fetching notifications:", response.status, errorText);
+        setNotifications([]);
+        return;
+      }
+      
       const data = await response.json();
       if (data.success) {
-        setNotifications(data.notifications);
+        setNotifications(data.notifications || []);
+      } else {
+        setNotifications([]);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
+      setNotifications([]);
     }
   };
 

@@ -45,6 +45,24 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
           },
         }
       );
+      
+      // Check if response is ok before parsing JSON
+      if (!response.ok) {
+        // If 404, the endpoint might not be deployed yet - just return empty array
+        if (response.status === 404) {
+          console.log("Notifications endpoint not found (404) - endpoint may not be deployed");
+          setNotifications([]);
+          setUnreadCount(0);
+          return;
+        }
+        // For other errors, try to parse error message
+        const errorText = await response.text();
+        console.error("Error fetching notifications:", response.status, errorText);
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
+      
       const data = await response.json();
       if (data.success) {
         setNotifications(data.notifications || []);
@@ -58,9 +76,14 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
             setUnreadCount(unread);
           }
         }
+      } else {
+        setNotifications([]);
+        setUnreadCount(0);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
@@ -110,6 +133,15 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
     if (!accessToken) return;
 
     try {
+      // Optimistically update UI first
+      startTransition(() => {
+        setNotifications(prev => prev.map(n => 
+          n.id === notificationId 
+            ? { ...n, readBy: currentUserId ? [...(n.readBy || []), currentUserId] : n.readBy }
+            : n
+        ));
+      });
+      
       // Defer the API call to not block UI
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/notifications/${notificationId}/read`,
@@ -120,18 +152,17 @@ export function NotificationBell({ isLoggedIn, accessToken }: NotificationBellPr
           },
         }
       );
-      // Optimistically update UI first, then refresh
-      startTransition(() => {
-        setNotifications(prev => prev.map(n => 
-          n.id === notificationId 
-            ? { ...n, readBy: currentUserId ? [...(n.readBy || []), currentUserId] : n.readBy }
-            : n
-        ));
-      });
-      // Refresh notifications in background
-      setTimeout(() => {
-        fetchNotifications();
-      }, 0);
+      
+      // Only refresh if the request was successful
+      if (response.ok) {
+        // Refresh notifications in background
+        setTimeout(() => {
+          fetchNotifications();
+        }, 0);
+      } else if (response.status !== 404) {
+        // Log error only if it's not a 404 (endpoint might not be deployed)
+        console.error("Error marking notification as read:", response.status);
+      }
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
