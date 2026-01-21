@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { SearchDialog } from "./SearchDialog";
+import { NotificationBell } from "./NotificationBell";
 
 interface NavigationProps {
   currentSection: string;
@@ -18,9 +19,10 @@ interface NavigationProps {
   onLogout: () => void;
   username?: string;
   isAdmin?: boolean;
+  accessToken?: string;
 }
 
-export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, username, isAdmin }: NavigationProps) {
+export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, username, isAdmin, accessToken }: NavigationProps) {
   const navItems = [
     { id: "home", label: "Home", icon: Home },
     { id: "blog", label: "Blog", icon: BookOpen },
@@ -85,6 +87,9 @@ export function Navigation({ currentSection, onNavigate, isLoggedIn, onLogout, u
           <div className="flex items-center gap-2">
             {/* Search */}
             <SearchDialog onNavigate={onNavigate} />
+            
+            {/* Notifications */}
+            {isLoggedIn && <NotificationBell isLoggedIn={isLoggedIn} accessToken={accessToken} />}
             
             {/* Theme Toggle */}
             <Button

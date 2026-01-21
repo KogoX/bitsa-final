@@ -869,6 +869,115 @@ app.delete("/make-server-430e8b93/admin/gallery/:id", async (c: Context) => {
   }
 });
 
+// ==================== NOTIFICATION ENDPOINTS ====================
+
+// Get all notifications (public - for all users)
+app.get("/make-server-430e8b93/notifications", async (c: Context) => {
+  try {
+    const notifications = await kv.getByPrefix("notification:");
+    const sortedNotifications = notifications.sort((a: any, b: any) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    return c.json({ success: true, notifications: sortedNotifications });
+  } catch (error) {
+    console.log("Error fetching notifications:", error);
+    return c.json({ error: "Failed to fetch notifications" }, 500);
+  }
+});
+
+// Create notification (admin only)
+app.post("/make-server-430e8b93/admin/notifications", async (c: Context) => {
+  try {
+    const adminCheck = await verifyAdmin(c);
+    if (adminCheck.error) {
+      return c.json({ error: adminCheck.error }, adminCheck.status);
+    }
+
+    const { title, message, type } = await c.req.json();
+    
+    if (!title || !message) {
+      return c.json({ error: "Title and message are required" }, 400);
+    }
+
+    const notificationId = `notification:${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const notification = {
+      id: notificationId,
+      title,
+      message,
+      type: type || "info", // info, warning, success, error
+      createdAt: new Date().toISOString(),
+      readBy: [] // Array of user IDs who have read this notification
+    };
+
+    await kv.set(notificationId, notification);
+
+    return c.json({ success: true, notification });
+  } catch (error) {
+    console.log("Error creating notification:", error);
+    return c.json({ error: "Failed to create notification" }, 500);
+  }
+});
+
+// Delete notification (admin only)
+app.delete("/make-server-430e8b93/admin/notifications/:id", async (c: Context) => {
+  try {
+    const adminCheck = await verifyAdmin(c);
+    if (adminCheck.error) {
+      return c.json({ error: adminCheck.error }, adminCheck.status);
+    }
+
+    const notificationId = c.req.param('id');
+    await kv.del(notificationId);
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.log("Error deleting notification:", error);
+    return c.json({ error: "Failed to delete notification" }, 500);
+  }
+});
+
+// Mark notification as read (for logged-in users)
+app.put("/make-server-430e8b93/notifications/:id/read", async (c: Context) => {
+  try {
+    const authHeader = c.req.header("Authorization");
+    if (!authHeader) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || `https://${Deno.env.get("SUPABASE_PROJECT_ID")}.supabase.co`;
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      return c.json({ error: "Invalid token" }, 401);
+    }
+
+    const notificationId = c.req.param('id');
+    const notification = await kv.get(notificationId);
+
+    if (!notification) {
+      return c.json({ error: "Notification not found" }, 404);
+    }
+
+    const readBy = notification.readBy || [];
+    if (!readBy.includes(user.id)) {
+      readBy.push(user.id);
+      await kv.set(notificationId, {
+        ...notification,
+        readBy
+      });
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.log("Error marking notification as read:", error);
+    return c.json({ error: "Failed to mark notification as read" }, 500);
+  }
+});
+
 // ==================== STATS ENDPOINTS ====================
 
 // Get members count

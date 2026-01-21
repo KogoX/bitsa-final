@@ -1,4 +1,3 @@
-import React from "react";
 import { useState, useEffect } from "react";
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
@@ -288,6 +287,7 @@ function App() {
           onLogout={handleLogout}
           username={username}
           isAdmin={isAdmin}
+          accessToken={accessToken}
         />
 
         <div className="pt-16">
@@ -447,7 +447,7 @@ function App() {
               <p className="text-sm text-gray-500 flex items-center justify-center gap-2">
                 <span>Built with</span>
                 <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                <span>by CoDE ONE Developers</span>
+                <span>by Bitsa Club members</span>
               </p>
             </div>
           </div>

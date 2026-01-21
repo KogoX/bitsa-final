@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Badge } from "./ui/badge";
-import { Shield, BookOpen, Calendar, Image as ImageIcon, Trash2, Edit, Plus, Loader2, Save, X, CheckCircle, XCircle, Users, Clock, MapPin } from "lucide-react";
+import { Shield, BookOpen, Calendar, Image as ImageIcon, Trash2, Edit, Plus, Loader2, Save, X, CheckCircle, XCircle, Users, Clock, MapPin, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 
@@ -61,6 +61,15 @@ interface Registration {
   registeredAt: string;
 }
 
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  createdAt: string;
+  readBy?: string[];
+}
+
 export function AdminDashboard({ accessToken }: AdminDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -69,6 +78,7 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Blog form state
   const [blogForm, setBlogForm] = useState({
@@ -105,6 +115,14 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
 
+  // Notification form state
+  const [notificationForm, setNotificationForm] = useState({
+    title: "",
+    message: "",
+    type: "info"
+  });
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+
   useEffect(() => {
     checkAdminStatus();
   }, [accessToken]);
@@ -125,7 +143,7 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
       
       if (data.isAdmin) {
         setIsAdmin(true);
-        await Promise.all([fetchBlogs(), fetchEvents(), fetchPhotos()]);
+        await Promise.all([fetchBlogs(), fetchEvents(), fetchPhotos(), fetchNotifications()]);
       } else {
         setIsAdmin(false);
         toast.error("Access Denied: Admin privileges required");
@@ -211,6 +229,83 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
       }
     } catch (error) {
       console.error("Error fetching registrations:", error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setNotifications(data.notifications);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  const handleCreateNotification = async () => {
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/admin/notifications`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(notificationForm),
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success("Notification sent successfully!");
+        setNotificationDialogOpen(false);
+        setNotificationForm({ title: "", message: "", type: "info" });
+        fetchNotifications();
+      } else {
+        toast.error(data.error || "Failed to send notification");
+      }
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      toast.error("Failed to send notification");
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this notification?")) return;
+
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-430e8b93/admin/notifications/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success("Notification deleted successfully!");
+        fetchNotifications();
+      } else {
+        toast.error(data.error || "Failed to delete notification");
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      toast.error("Failed to delete notification");
     }
   };
 
@@ -619,7 +714,7 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
 
         {/* Dashboard Tabs */}
         <Tabs defaultValue="blogs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-800/50">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-800/50">
             <TabsTrigger value="blogs" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
               <BookOpen className="w-4 h-4 mr-2" />
               Blogs
@@ -635,6 +730,10 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
             <TabsTrigger value="gallery" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
               <ImageIcon className="w-4 h-4 mr-2" />
               Gallery
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+              <Bell className="w-4 h-4 mr-2" />
+              Notifications
             </TabsTrigger>
           </TabsList>
 
@@ -1251,6 +1350,159 @@ export function AdminDashboard({ accessToken }: AdminDashboardProps) {
                     )}
                   </CardContent>
                 </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-2xl text-white">Notification Management</h3>
+              <Dialog open={notificationDialogOpen} onOpenChange={(open) => {
+                setNotificationDialogOpen(open);
+                if (!open) {
+                  setNotificationForm({ title: "", message: "", type: "info" });
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <Button className="bg-cyan-500 hover:bg-cyan-600 text-black">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Send Notification
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-gray-900 border-cyan-500/20 text-white max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Send Notification to All Users</DialogTitle>
+                    <DialogDescription className="text-gray-400">
+                      Create a notification that will be visible to all users
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={notificationForm.title}
+                        onChange={(e) => setNotificationForm({ ...notificationForm, title: e.target.value })}
+                        className="bg-gray-800/50 border-cyan-500/30 text-white"
+                        placeholder="Notification title"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Message</Label>
+                      <Textarea
+                        value={notificationForm.message}
+                        onChange={(e) => setNotificationForm({ ...notificationForm, message: e.target.value })}
+                        className="bg-gray-800/50 border-cyan-500/30 text-white resize-none"
+                        placeholder="Notification message"
+                        rows={4}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <select
+                        value={notificationForm.type}
+                        onChange={(e) => setNotificationForm({ ...notificationForm, type: e.target.value })}
+                        className="w-full bg-gray-800/50 border border-cyan-500/30 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      >
+                        <option value="info">Info</option>
+                        <option value="success">Success</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleCreateNotification}
+                      className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-black"
+                      disabled={!notificationForm.title || !notificationForm.message}
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Send Notification
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setNotificationDialogOpen(false);
+                        setNotificationForm({ title: "", message: "", type: "info" });
+                      }}
+                      variant="outline"
+                      className="border-cyan-500/50 text-cyan-400"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid gap-4">
+              {notifications.length === 0 ? (
+                <Card className="bg-gray-900/50 backdrop-blur-sm border-cyan-500/20">
+                  <CardContent className="py-12 text-center">
+                    <Bell className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">No notifications sent yet.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                notifications.map((notification) => {
+                  const getTypeColor = (type: string) => {
+                    switch (type) {
+                      case "success":
+                        return "border-green-500/30 bg-green-500/10";
+                      case "warning":
+                        return "border-yellow-500/30 bg-yellow-500/10";
+                      case "error":
+                        return "border-red-500/30 bg-red-500/10";
+                      default:
+                        return "border-cyan-500/30 bg-cyan-500/10";
+                    }
+                  };
+
+                  const getTypeText = (type: string) => {
+                    switch (type) {
+                      case "success":
+                        return "Success";
+                      case "warning":
+                        return "Warning";
+                      case "error":
+                        return "Error";
+                      default:
+                        return "Info";
+                    }
+                  };
+
+                  return (
+                    <Card key={notification.id} className={`bg-gray-900/50 backdrop-blur-sm border-l-4 ${getTypeColor(notification.type)}`}>
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={`${getTypeColor(notification.type)} text-white border-0`}>
+                                {getTypeText(notification.type)}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {new Date(notification.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <h4 className="text-xl text-white mb-2">{notification.title}</h4>
+                            <p className="text-gray-400 text-sm mb-2">{notification.message}</p>
+                            <p className="text-xs text-gray-500">
+                              Read by {notification.readBy?.length || 0} user(s)
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() => handleDeleteNotification(notification.id)}
+                            size="sm"
+                            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </div>
           </TabsContent>
