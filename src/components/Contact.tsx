@@ -187,6 +187,42 @@ export function Contact() {
             </Card>
           </div>
         </div>
+
+        {/* Map Section */}
+        <Card className="mt-8 bg-gray-900/50 backdrop-blur-sm border-cyan-500/20">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-cyan-400" />
+              Find Us at Baraton University
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Visit us at the Library Building, Bitsa Club Room on the University of Eastern Africa, Baraton campus
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-[400px] rounded-lg overflow-hidden border border-cyan-500/20">
+              <iframe
+                src={`https://www.google.com/maps?q=0.257821,35.086557&hl=en&z=15&output=embed`}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full"
+                title="Baraton University Location"
+              />
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-gray-400 text-sm">
+                <span className="text-cyan-400 font-semibold">Address:</span> P.O. Box 2500, 30100 Eldoret, Uasin Gishu County, Kenya
+              </p>
+              <p className="text-gray-400 text-sm mt-1">
+                <span className="text-cyan-400 font-semibold">Coordinates:</span> 0.257821°N, 35.086557°E
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
