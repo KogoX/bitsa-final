@@ -94,7 +94,7 @@ export function Contact() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="your.email@university.edu"
+                      placeholder="yourname@domain.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="pl-10 bg-gray-800/50 border-cyan-500/30 text-white placeholder:text-gray-500"
@@ -140,8 +140,8 @@ export function Contact() {
           </Card>
 
           {/* Contact Information */}
-          <div className="space-y-6">
-            <Card className="bg-gray-900/50 backdrop-blur-sm border-cyan-500/20">
+          <div className="space-y-6 mt-8 md:mt-0">
+            <Card className="bg-gray-900/50 backdrop-blur-sm border-cyan-500/20 ">
               <CardHeader>
                 <CardTitle className="text-white">Contact Information</CardTitle>
                 <CardDescription className="text-gray-400">
